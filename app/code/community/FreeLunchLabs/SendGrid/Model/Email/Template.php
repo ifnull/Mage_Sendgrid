@@ -136,6 +136,26 @@ class FreeLunchLabs_SendGrid_Model_Email_Template extends Mage_Core_Model_Email_
 
     public function buildUniqueArgs($variables) {
 
+        // unique_args whitelist
+        $whitelist = array(
+            // Email
+            'email',
+
+            // Checkout
+            'checkoutType',
+            'order',
+            'reason',
+
+            // Store
+            'store',
+
+            // Customer
+            'name',
+            'customer',
+
+            ''
+        );
+
         $unique_args = array();
 
         //Send email type
@@ -143,16 +163,24 @@ class FreeLunchLabs_SendGrid_Model_Email_Template extends Mage_Core_Model_Email_
 
         //Send data in variable array
         foreach($variables as $key => $variable) {
-            if(gettype($variable) === 'object' && is_subclass_of($variable, 'Varien_Object')) {
-                if(is_array($variable->getData())) {
-                    foreach($variable->getData() as $dataKey => $dataItem) {
-                        $unique_args[$key . " - " . $dataKey] = $dataItem;
+            if(in_array($key, $whitelist)){
+                if(gettype($variable) === 'object' && is_subclass_of($variable, 'Varien_Object')) {
+                    if(is_array($variable->getData())) {
+                        foreach($variable->getData() as $dataKey => $dataItem) {
+                            $unique_args[$key . "[" . $dataKey . "]"] = $dataItem;
+                        }
                     }
+                } else {
+                    $unique_args[$key] = $variable;
                 }
-            } else {
-                $unique_args[$key] = $variable;
             }
         }
+
+        // Trim some fat
+        unset($unique_args['store[base_currency]']);
+        unset($unique_args['store[current_currency]']);
+        unset($unique_args['store[current_currency]']);
+        unset($unique_args['store[available_currency_codes]']);
 
         return $unique_args;
     }
