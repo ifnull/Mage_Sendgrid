@@ -9,7 +9,7 @@ class FreeLunchLabs_SendGrid_Model_Email_Template extends Mage_Core_Model_Email_
     public function send($email, $name = null, array $variables = array()) {
         if (Mage::getStoreConfig('sendgrid/general/active')) {
             if (!$this->isValidForSend()) {
-                Mage::logException(new Exception('This letter cannot be sent.')); 
+                Mage::logException(new Exception('This letter cannot be sent.'));
                 return false;
             }
 
@@ -17,7 +17,7 @@ class FreeLunchLabs_SendGrid_Model_Email_Template extends Mage_Core_Model_Email_
             $client = new Zend_Http_Client();
             $client->setUri('https://api.sendgrid.com/api/mail.send.json');
             $client->setMethod(Zend_Http_Client::POST);
-            
+
             //Recipient(s)
             $emails = array_values((array) $email);
             $names = is_array($name) ? $name : (array) $name;
@@ -42,11 +42,11 @@ class FreeLunchLabs_SendGrid_Model_Email_Template extends Mage_Core_Model_Email_
 
                 $is_first = false;
             }
-            
+
             //Subject
             $subject = $this->getProcessedTemplateSubject($variables);
             $client->setParameterPost('subject', $subject);
-            
+
             //From Name
             $client->setParameterPost('from', $this->getSenderEmail());
             $client->setParameterPost('fromname', $this->getSenderName());
@@ -78,16 +78,16 @@ class FreeLunchLabs_SendGrid_Model_Email_Template extends Mage_Core_Model_Email_
             //Add Unique Args
             $smtp_options['unique_args'] = $this->buildUniqueArgs($variables);
             $smtp_options['unique_args']['email_subject'] = $subject;
-            
+
             //Extra Header Options
             if(!is_null($smtp_options)) {
                 $client->setParameterPost('x-smtpapi', json_encode($smtp_options));
             }
-            
+
             //Set Post Params
             $client->setParameterPost('api_user', Mage::getStoreConfig('sendgrid/general/username'));
             $client->setParameterPost('api_key', Mage::getStoreConfig('sendgrid/general/password'));
-            
+
             //Send it!
             try {
                 $client->request();
@@ -133,27 +133,27 @@ class FreeLunchLabs_SendGrid_Model_Email_Template extends Mage_Core_Model_Email_
 
         return $this;
     }
-    
+
     public function buildUniqueArgs($variables) {
-        
+
         $unique_args = array();
-        
+
         //Send email type
         $unique_args['email_type'] = $this->getTemplateId();
-        
+
         //Send data in variable array
         foreach($variables as $key => $variable) {
-            if(is_subclass_of($variable, 'Varien_Object')) {
+            if(gettype($variable) === 'object' && is_subclass_of($variable, 'Varien_Object')) {
                 if(is_array($variable->getData())) {
                     foreach($variable->getData() as $dataKey => $dataItem) {
                         $unique_args[$key . " - " . $dataKey] = $dataItem;
-                    }   
+                    }
                 }
             } else {
                 $unique_args[$key] = $variable;
             }
         }
-        
+
         return $unique_args;
     }
 
